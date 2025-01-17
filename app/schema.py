@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr
 from models import UserTypeEnum
+from  typing import Optional
 
 class User(BaseModel):
     """
@@ -15,7 +16,7 @@ class User(BaseModel):
     location: str = Field(..., max_length=255, description="The location of the user.")
     is_matched: bool = Field(default=False, description="Indicates if the user has been matched.")
     hashed_password: str = Field(..., min_length=8, description="The hashed password for the user's account.")
-
+    matched_id: Optional[int] = Field(None, description="who the user has been matched with")
     class Config:
         from_attributes = True
         populate_by_name = True

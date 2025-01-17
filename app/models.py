@@ -26,3 +26,4 @@ class User(Base):
     user_type = Column(Enum(UserTypeEnum), nullable=False)
     has_pets = Column(Boolean, default=False)
     family_size = Column(Integer, nullable=True)
+    matched_id = Column(String, nullable=True, default=None)

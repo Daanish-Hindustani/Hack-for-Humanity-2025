@@ -29,7 +29,8 @@ async def create_user(user: SchemaUser):
         user_type=user.user_type,
         location=user.location,
         is_matched=user.is_matched,
-        hashed_password=user.hashed_password
+        hashed_password=user.hashed_password,
+        matched_id = user.matched_id
     )
 
     db.session.add(db_user)
@@ -69,6 +70,7 @@ async def update_user(user_id: int, updated_user: SchemaUser):
     user.location = updated_user.location
     user.is_matched = updated_user.is_matched
     user.hashed_password = updated_user.hashed_password
+    user.matched_id = updated_user.matched_id
 
     db.session.commit()
     return user
@@ -85,6 +87,8 @@ async def delete_user(user_id: int):
     db.session.commit()
 
     return {"message": f"User with ID {user_id} deleted successfully"}
+
+
 
 # Start the application
 if __name__ == '__main__':
