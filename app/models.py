@@ -1,26 +1,28 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, Enum
 from sqlalchemy.ext.declarative import declarative_base
+from enum import Enum as PyEnum
 
 Base = declarative_base()
 
-class HostFamily(Base):
-    __tablename__ = 'host_families'
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    contact_info = Column(String)
-    number_of_people = Column(Integer)
-    pet_friendly = Column(Boolean, default=False)
-    location = Column(String)
-    matched = Column(Boolean, default=False)
+class UserTypeEnum(str, PyEnum):
+    HOST_FAMILY = "host_family"
+    DISPLACED_FAMILY = "displaced_family"
 
-class DisplacedFamily(Base):
-    __tablename__ = 'displaced_families'
+class User(Base):
+    """
+    Represents a user in the system. Users can either be host families 
+    or displaced families, with various attributes like location, 
+    contact info, and family size.
+    """
+    __tablename__ = 'users'
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    contact_info = Column(String)
-    number_of_family_members = Column(Integer)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    contact_info = Column(String(255), nullable=True)
+    location = Column(String(255), nullable=True)
+    is_matched = Column(Boolean, default=False)
+    name = Column(String(100), index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    user_type = Column(Enum(UserTypeEnum), nullable=False)
     has_pets = Column(Boolean, default=False)
-    location = Column(String)
-    matched = Column(Boolean, default=False)
+    family_size = Column(Integer, nullable=True)

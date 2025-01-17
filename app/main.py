@@ -1,11 +1,8 @@
 import uvicorn
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi_sqlalchemy import DBSessionMiddleware, db
-from schema import HostFamily as SchemaHostFamily
-from schema import DisplacedFamily as SchemaDisplacedFamily
-from models import HostFamily as ModelHostFamily
-from models import DisplacedFamily as ModelDisplacedFamily
-from sqlalchemy.orm import Session
+from schema import User as SchemaUser
+from models import User as ModelUser
 import os
 from dotenv import load_dotenv
 
@@ -13,116 +10,81 @@ load_dotenv('.env')
 
 app = FastAPI()
 
-
 app.add_middleware(DBSessionMiddleware, db_url=os.environ['DATABASE_URL'])
-
-# APIs 
 
 # Base route
 @app.get("/")
 async def root():
-    return {"message": "hello world"}
+    return {"message": "Welcome to the User Management API"}
 
-# Register family (Create a new displaced family)
-@app.post('/family/', response_model=SchemaDisplacedFamily)
-async def register_family(family: SchemaDisplacedFamily):
-    db_family = ModelDisplacedFamily(
-        name=family.name,
-        contact_info=family.contact_info,
-        number_of_family_members=family.number_of_family_members,
-        has_pets=family.has_pets,
-        location=family.location,
-        matched=family.matched
+# Create a new user
+@app.post('/users/', response_model=SchemaUser)
+async def create_user(user: SchemaUser):
+    db_user = ModelUser(
+        name=user.name,
+        email=user.email,
+        contact_info=user.contact_info,
+        family_size=user.family_size,
+        has_pets=user.has_pets,
+        user_type=user.user_type,
+        location=user.location,
+        is_matched=user.is_matched,
+        hashed_password=user.hashed_password
     )
 
-    db.session.add(db_family)
+    db.session.add(db_user)
     db.session.commit()
-    return db_family
+    return db_user
 
-# Get all families
-@app.get('/family/')
-async def get_families():
-    families = db.session.query(ModelDisplacedFamily).all()
-    return families
+# Get all users
+@app.get('/users/')
+async def get_users():
+    users = db.session.query(ModelUser).all()
+    return users
 
-# Get a single family by ID
-@app.get('/family/{family_id}')
-async def get_family(family_id: int):
-    family = db.session.query(ModelDisplacedFamily).filter(ModelDisplacedFamily.id == family_id).first()
+# Get a single user by ID
+@app.get('/users/{user_id}')
+async def get_user(user_id: int):
+    user = db.session.query(ModelUser).filter(ModelUser.id == user_id).first()
     
-    if not family:
-        raise HTTPException(status_code=404, detail="Family not found")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
-    return family
+    return user
 
-# @app.put('/family/{family_id}')
+# Update a user by ID
+@app.put('/users/{user_id}', response_model=SchemaUser)
+async def update_user(user_id: int, updated_user: SchemaUser):
+    user = db.session.query(ModelUser).filter(ModelUser.id == user_id).first()
 
-@app.delete('/family/{family_id}')
-async def delete_family(family_id: int):
-    # Query the family by ID
-    family = db.session.query(ModelDisplacedFamily).filter(ModelDisplacedFamily.id == family_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # If the family is not found, raise an HTTPException
-    if not family:
-        raise HTTPException(status_code=404, detail="Family not found")
-    
-    # Delete the family record
-    db.session.delete(family)
+    user.name = updated_user.name
+    user.email = updated_user.email
+    user.contact_info = updated_user.contact_info
+    user.family_size = updated_user.family_size
+    user.has_pets = updated_user.has_pets
+    user.user_type = updated_user.user_type
+    user.location = updated_user.location
+    user.is_matched = updated_user.is_matched
+    user.hashed_password = updated_user.hashed_password
+
     db.session.commit()
+    return user
 
-    # Return a success message
-    return {"message": f"Family with ID {family_id} deleted successfully"}
+# Delete a user by ID
+@app.delete('/users/{user_id}')
+async def delete_user(user_id: int):
+    user = db.session.query(ModelUser).filter(ModelUser.id == user_id).first()
 
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-# Register host (Create a new host family)
-@app.post('/host/', response_model=SchemaHostFamily)
-async def register_host(host: SchemaHostFamily):
-    db_host = ModelHostFamily(
-        name=host.name,
-        contact_info=host.contact_info,
-        number_of_people=host.number_of_people,  
-        pet_friendly=host.pet_friendly,  
-        location=host.location,
-        matched=host.matched
-    )
-
-    db.session.add(db_host)
-    db.session.commit()
-    return db_host
-
-
-@app.get('/host/')
-async def get_hosts():
-    hosts = db.session.query(ModelHostFamily).all()
-    return hosts
-
-@app.get('/host/{host_id}')
-async def get_host(host_id: int):
-    host = db.session.query(ModelHostFamily).filter(ModelHostFamily.id == host_id).first()
-    
-    if not host:
-        raise HTTPException(status_code=404, detail="Host not found")
-
-    return host
-
-
-@app.delete('/host/{host_id}')
-async def delete_host(host_id: int):
-    # Query the family by ID
-    host = db.session.query(ModelHostFamily).filter(ModelHostFamily.id == host_id).first()
-
-    # If the family is not found, raise an HTTPException
-    if not host:
-        raise HTTPException(status_code=404, detail="host not found")
-    
-    # Delete the family record
-    db.session.delete(host)
+    db.session.delete(user)
     db.session.commit()
 
-    # Return a success message
-    return {"message": f"Host with ID {host_id} deleted successfully"}
-
-
+    return {"message": f"User with ID {user_id} deleted successfully"}
 
 # Start the application
 if __name__ == '__main__':
