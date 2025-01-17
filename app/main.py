@@ -5,6 +5,7 @@ from schema import HostFamily as SchemaHostFamily
 from schema import DisplacedFamily as SchemaDisplacedFamily
 from models import HostFamily as ModelHostFamily
 from models import DisplacedFamily as ModelDisplacedFamily
+from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
 
@@ -58,19 +59,19 @@ async def get_family(family_id: int):
 
 @app.delete('/family/{family_id}')
 async def delete_family(family_id: int):
-    family = db.query(ModelDisplacedFamily).filter(ModelDisplacedFamily.id == family_id).first()
-    
+    # Query the family by ID
+    family = db.session.query(ModelDisplacedFamily).filter(ModelDisplacedFamily.id == family_id).first()
+
+    # If the family is not found, raise an HTTPException
     if not family:
         raise HTTPException(status_code=404, detail="Family not found")
     
-    db.delete(family)
-    
-    db.commit()
-    
+    # Delete the family record
+    db.session.delete(family)
+    db.session.commit()
+
+    # Return a success message
     return {"message": f"Family with ID {family_id} deleted successfully"}
-
-
-
 
 
 # Register host (Create a new host family)
@@ -94,6 +95,34 @@ async def register_host(host: SchemaHostFamily):
 async def get_hosts():
     hosts = db.session.query(ModelHostFamily).all()
     return hosts
+
+@app.get('/host/{host_id}')
+async def get_host(host_id: int):
+    host = db.session.query(ModelHostFamily).filter(ModelHostFamily.id == host_id).first()
+    
+    if not host:
+        raise HTTPException(status_code=404, detail="Host not found")
+
+    return host
+
+
+@app.delete('/host/{host_id}')
+async def delete_host(host_id: int):
+    # Query the family by ID
+    host = db.session.query(ModelHostFamily).filter(ModelHostFamily.id == host_id).first()
+
+    # If the family is not found, raise an HTTPException
+    if not host:
+        raise HTTPException(status_code=404, detail="host not found")
+    
+    # Delete the family record
+    db.session.delete(host)
+    db.session.commit()
+
+    # Return a success message
+    return {"message": f"Host with ID {host_id} deleted successfully"}
+
+
 
 # Start the application
 if __name__ == '__main__':
