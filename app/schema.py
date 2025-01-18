@@ -7,6 +7,7 @@ class User(BaseModel):
     Represents a generalized user model with attributes for name, 
     contact information, and user type.
     """
+    id: Optional[int] = Field(..., description="Users ID.")
     name: str = Field(..., max_length=100, description="The name of the user.")
     email: EmailStr = Field(..., description="The email address of the user.")
     contact_info: str = Field(..., max_length=255, description="Contact details of the user.")
