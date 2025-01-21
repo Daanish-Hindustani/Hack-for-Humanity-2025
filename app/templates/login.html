@@ -63,7 +63,7 @@
     <hr>
     <p class="text-center">Don't have an account? <a class="switch-link" onclick="toggleForm()">Sign Up</a></p>
 
-    <form id="signupForm" class="d-none">
+    <form id="signupForm" class="d-none" novalidate>
       <div class="mb-3">
         <label for="familyType" class="form-label">Are you a host or displaced family?</label>
         <select id="familyType" class="form-control" onchange="toggleConditionalForm()">
@@ -97,22 +97,22 @@
       <div id="displacedForm" class="conditional-form">
         <div class="mb-3">
           <label for="displacedFamilyMembers" class="form-label">How many family members do you want to take in?</label>
-          <input type="number" class="form-control" id="displacedFamilyMembers" required>
+          <input type="number" class="form-control" id="displacedFamilyMembers" name="displacedFamilyMembers" required>
         </div>
         <div class="mb-3">
           <label for="displacedPetFriendly" class="form-label">Are you pet friendly?</label>
-          <select class="form-control" id="displacedPetFriendly" required>
+          <select class="form-control" id="displacedPetFriendly" name="displacedPetFriendly" required>
             <option value="yes">Yes</option>
             <option value="no">No</option>
           </select>
         </div>
         <div class="mb-3">
           <label for="displacedState" class="form-label">State (ABV)</label>
-          <input type="text" class="form-control" id="displacedState" required>
+          <input type="text" class="form-control" id="displacedState" name="displacedState" required>
         </div>
         <div class="mb-3">
           <label for="displacedPhone" class="form-label">Phone Number</label>
-          <input type="text" class="form-control" id="displacedPhone" required>
+          <input type="text" class="form-control" id="displacedPhone" name="displacedPhone" required>
         </div>
       </div>
 
@@ -133,6 +133,7 @@
   </div>
 
   <script>
+    // Toggle between login and signup forms
     function toggleForm() {
       const loginForm = document.getElementById('loginForm');
       const signupForm = document.getElementById('signupForm');
@@ -140,6 +141,7 @@
       signupForm.classList.toggle('d-none');
     }
 
+    // Handle visibility of conditional forms based on family type selection
     function toggleConditionalForm() {
       const familyType = document.getElementById('familyType').value;
       const hostForm = document.getElementById('hostForm');
@@ -154,65 +156,46 @@
       }
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    const formData = new FormData();
-    formData.append('username', email);
-    formData.append('password', password);
+    // Ensure the "host" option is selected by default when the page loads
+    window.onload = function() {
+      document.getElementById('familyType').value = 'host';
+      toggleConditionalForm();
+    };
 
-    console.log(formData)
-    
-    try {
-        const response = await fetch('http://127.0.0.1:8000/token/', {
-            method: 'POST',
-            body: formData      
+    // Handle signup form submission
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const user_type = document.getElementById('familyType').value;
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('signupEmail').value;
+      const hashed_password = document.getElementById('signupPassword').value;
+      const contact_info = familyType === 'host' ? document.getElementById('phone').value : document.getElementById('displacedPhone').value;
+      const location = familyType === 'host' ? document.getElementById('state').value : document.getElementById('displacedState').value;
+      const family_size = familyType === 'host' ? document.getElementById('familyMembers').value : document.getElementById('displacedFamilyMembers').value;
+      const has_pets = familyType === 'host' ? document.getElementById('petFriendly').value : document.getElementById('displacedPetFriendly').value;
+
+
+      const url = 'http://127.0.0.1:8000/signup/';
+      
+      try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userData)
         });
 
         if (response.ok) {
             const data = await response.json();
-            const token = data.access_token;
-            // Redirect to the dashboard page
-            window.location.href = '/dashboard';
+            console.log("User created successfully:", data);
         } else {
-            alert('Login failed! Please check your credentials.');
+            console.error("Failed to create user:", response.status, response.statusText);
         }
     } catch (error) {
-        console.error('Error during login:', error);
-        alert('An error occurred while processing your request. Please try again later.');
+        console.error("Error creating user:", error);
     }
-});
 
-    document.getElementById('signupForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const familyType = document.getElementById('familyType').value;
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('signupEmail').value;
-      const password = document.getElementById('signupPassword').value;
-      const phone = familyType === 'host' ? document.getElementById('phone').value : document.getElementById('displacedPhone').value;
-      const state = familyType === 'host' ? document.getElementById('state').value : document.getElementById('displacedState').value;
-      const familyMembers = familyType === 'host' ? document.getElementById('familyMembers').value : document.getElementById('displacedFamilyMembers').value;
-      const petFriendly = familyType === 'host' ? document.getElementById('petFriendly').value : document.getElementById('displacedPetFriendly').value;
-
-      try {
-        const response = await fetch('http://127.0.0.1:8000/signup/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password, familyType, phone, state, familyMembers, petFriendly })
-        });
-        if (response.ok) {
-          alert('Sign-up successful!');
-          toggleForm();
-        } else {
-          alert('Sign-up failed!');
-        }
-      } catch (error) {
-        console.error('Error during sign-up:', error);
-        alert('An error occurred!');
-      }
     });
   </script>
 
